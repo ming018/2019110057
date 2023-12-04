@@ -133,7 +133,27 @@ def start():
     total_reward = 0
 
     action = None
+    '''
+    def choose_action(state, last):
+    global epsilon
 
+    epsilon -= 0.01
+    # print('epsilon : ', epsilon)
+    
+    if random.random() < epsilon:
+        print('무작위 행동 선택됨')
+        while True:
+            new_action = random.randint(0, 3)
+            if new_action != last:
+                # new_action = int(input())
+                return new_action
+     # 무작위 행동 선택
+    else:
+        max_value = np.max(Q[state, :])  # 최대값 찾기
+        max_indices = np.where(Q[state, :] == max_value)[0]  # 최대값을 가진 모든 인덱스 찾기
+        return random.choice(max_indices)  # 최대값 인덱스 중에서 무작위로 하나 선택
+
+    '''
     
 
     for i in range(1000):
