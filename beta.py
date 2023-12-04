@@ -1,4 +1,3 @@
-# R값이 변경 되는 matrix를 포함한 Q러닝
 import numpy as np
 import random
 
