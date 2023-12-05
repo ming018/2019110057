@@ -22,9 +22,10 @@ world = np.zeros((num_states, num_states))
 world[len(world) // 2][len(world) // 2] = 1 # UAV의 초기 위치
 
 # 학습 매개변수
-gamma = 0.75  # 할인 계수
-learning_rate = 0.05  # 학습률
+gamma = 0.1  # 할인 계수
+learning_rate = 0.01  # 학습률
 num_episodes = 1000  # 총 에피소드 수
+minus = 0.00001 # 입실론 감쇠값
 
 
 epsilon = 0.99  # 입실론 값 설정
@@ -49,9 +50,6 @@ def update_R_matrix(location, action, loc):
         field[location[0] * num_states + location[1]][0] = 0
         field[location[0] * num_states + location[1]][1] = 0
 
-        # if not(percents[location[0] * num_states + location[1]] + 0.05 >= 0.95) :
-        #     percents[location[0]z * num_states + location[1]] += 0.05
-        #print('상승한 확률 값 : ', percents[location[0] * num_states + location[1]])
 
 
 def move(location, a) :
@@ -60,8 +58,8 @@ def move(location, a) :
 
     # 동 서 남 북 : 0 1 2 3
 
+    # 에이전트의 이동 횟수를 보기 위해서 주석처리
     #world[location[0]][location[1]] = 0
-
 
     if a == 0 : # 동
         if location[1] % num_states == num_states - 1 :
@@ -98,9 +96,10 @@ def move(location, a) :
 
 location = [len(world) // 2, len(world) // 2] # 최초 중앙의 좌표값 전달
 
+# 각 상태들의 데이터 발생 확률
 percents = [0.8, 0.9, 0.9, 1.0, 1.0, 1.0,
             0.8, 0.9, 0.9, 1.0, 1.0, 1.0,
-            1.0, 0.9, 0.9, 1.0, 1.0, 1.0,
+            0.0, 0.9, 0.9, 1.0, 1.0, 1.0,
             0.8, 0.9, 0.9, 1.0, 1.0, 1.0,
             0.8, 0.9, 0.9, 1.0, 1.0, 1.0,
             0.8, 0.9, 0.9, 1.0, 1.0, 1.0]
@@ -115,24 +114,23 @@ def start():
     global location, total_reward, total_reward_, world
     array = []
     array2 = []
-    for _ in range(20) :
+
+    for j in range(20) :
         location = [len(world) // 2, len(world) // 2] # 최초 중앙의 좌표값 전달
         total_reward = 0
         total_reward_= 0
         # UAV가 실제 움직일 공간
         world = np.zeros((num_states, num_states))
-        # world[len(world) // 2][len(world) // 2] = 1 # UAV의 초기 위치
+    
         world[len(world) // 2][len(world) // 2] = 1 # UAV의 초기 위치
         
         action = None
-
-
         
         # 입실론-그리디 전략에 따른 행동 선택을 위한 함수
         def choose_action(state, last):
-            global epsilon
+            global epsilon, minus
 
-            epsilon -= 0.00001
+            epsilon -= minus
             # print('epsilon : ', epsilon)
             
             if random.random() < epsilon:
@@ -219,68 +217,18 @@ def start():
 
         array.append(total_reward)
         array2.append(total_reward_)
+        print('-------------------------------------')
+        print(j, '번째 에피소드')
+        print(world)
+        print('종료시점의 epsilon :', epsilon)
+        print('이번 에피소드 :', total_reward)
+        print('-------------------------------------')
 
-            
+    
+    print(world)
 
     print(array)
     print(array2)
-
-    # print('최종 epsilon :', epsilon)
-
-    # show_matrix(Q)
-    # print('---------------')
-    # print('R :')
-    # show_matrix(R)
-    # print('---------------')
-    # print('total_reward :', total_reward)
-    # print('total_reward_ :', total_reward_)
-    # print('action :', action)
-    # print('check_date : ')
-    # show_array(check_date)
-
-    # print('---------------')
-    # print('world: ')
-    # print(world)
-    # print()
-    # show_array(array)
-    # show_array(array2)
-
-    # # show_array(check_date)
-
-    # # print(percent)
-
-    # show_field()
-    # #input()
-
-
-# ----
-
-# def main() :
-#     # Q-learning 학습 과정
-#     for episode in range(num_episodes):
-#         state = random.randint(0, num_states - 1)  # 초기 상태 선택
-
-#         for _ in range(100):
-#             action = random.randint(0, num_actions - 1)  # 무작위 행동 선택
-#             next_state = random.randint(0, num_states - 1)  # 무작위 다음 상태 선택
-#             reward = R[state, action]  # 현재 상태와 행동에 대한 보상
-
-#             # Q-테이블 업데이트
-            
-
-#             state = next_state  # 상태 업데이트
-        
-#         print('---------------------')
-#         print(R)
-#         print()
-#         print(Q)
-#         print('---------------------')
-        
-#         input()
-
-#         # R-matrix 업데이트
-#         # update_R_matrix()
-
 
 def show_array(array) :
     for i in range(len(array)) :
@@ -306,6 +254,5 @@ def show_matrix(matrix) :
         print(np.round(matrix[i], 2))
         
 if __name__ == "__main__":
-    # main()
+
     start()
-    pass
