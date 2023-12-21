@@ -9,7 +9,6 @@ num_actions = 4
 R = np.zeros((num_states * num_states, num_actions))
 Q = np.zeros((num_states * num_states, num_actions))
 
-
 # 센싱 데이터의 유무와 카운트를 담는 배열
 field = [[0, 0] for _ in range(num_states * num_states)]
 check_date = [0 for _ in range(num_states * num_states)]
@@ -28,7 +27,7 @@ num_episodes = 1000  # 총 에피소드 수
 minus = 0.00001 # 입실론 감쇠값
 
 
-epsilon = 0.99  # 입실론 값 설정
+epsilon = 0.9  # 입실론 값 설정
 
 total_reward = 0
 total_reward_= 0
@@ -97,12 +96,12 @@ def move(location, a) :
 location = [len(world) // 2, len(world) // 2] # 최초 중앙의 좌표값 전달
 
 # 각 상태들의 데이터 발생 확률
-percents = [0.8, 0.9, 0.9, 1.0, 1.0, 1.0,
-            0.8, 0.9, 0.9, 1.0, 1.0, 1.0,
-            0.0, 0.9, 0.9, 1.0, 1.0, 1.0,
-            0.8, 0.9, 0.9, 1.0, 1.0, 1.0,
-            0.8, 0.9, 0.9, 1.0, 1.0, 1.0,
-            0.8, 0.9, 0.9, 1.0, 1.0, 1.0]
+percents = [1.0, 0.9, 0.9, 1.0, 1.0, 1.0,
+            1.0, 0.9, 0.9, 1.0, 1.0, 1.0,
+            1.0, 0.9, 0.9, 1.0, 1.0, 1.0,
+            1.0, 0.9, 0.9, 1.0, 1.0, 1.0,
+            1.0, 0.9, 0.9, 1.0, 1.0, 1.0,
+            1.0, 0.9, 0.9, 1.0, 1.0, 1.0]
 
 def get_random_diff(last):
     while True:
@@ -120,7 +119,7 @@ def start():
         total_reward = 0
         total_reward_= 0
         # UAV가 실제 움직일 공간
-        world = np.zeros((num_states, num_states))
+        # world = np.zeros((num_states, num_states))
     
         world[len(world) // 2][len(world) // 2] = 1 # UAV의 초기 위치
         
@@ -146,7 +145,7 @@ def start():
                 max_indices = np.where(Q[state, :] == max_value)[0]  # 최대값을 가진 모든 인덱스 찾기
                 return random.choice(max_indices)  # 최대값 인덱스 중에서 무작위로 하나 선택
 
-        for i in range(2000):
+        for _ in range(2000):
             action = choose_action(location[0] * num_states + location[1], action)  # 입실론-그리디 전략에 따라 행동 선택
             now_locate = []
             now_locate.append(location[0])
@@ -206,14 +205,14 @@ def start():
                     if k < 20 : # i < 20
                         R[k + num_states][3] += 5
             
-            loc = now_locate[0] * num_states + now_locate[1]
-            next_loc = location[0] * num_states + location[1]
+                loc = now_locate[0] * num_states + now_locate[1]
+                next_loc = location[0] * num_states + location[1]
 
-            num1 = R[loc][action]
-            num2 = gamma * np.max(Q[next_loc])
-            num3 = Q[loc][action]
+                num1 = R[loc][action]
+                num2 = gamma * np.max(Q[next_loc])
+                num3 = Q[loc][action]
 
-            Q[loc][action] = Q[loc][action] + learning_rate * (num1 + num2 - num3)
+                Q[loc][action] = Q[loc][action] + learning_rate * (num1 + num2 - num3)
 
         array.append(total_reward)
         array2.append(total_reward_)
@@ -223,12 +222,12 @@ def start():
         print('종료시점의 epsilon :', epsilon)
         print('이번 에피소드 :', total_reward)
         print('-------------------------------------')
+        
+        print('에피소드 별로 누적된 보상')
+        print(array)
+        print('에피소드 별로 감소된 값')
+        print(array2)
 
-    
-    print(world)
-
-    print(array)
-    print(array2)
 
 def show_array(array) :
     for i in range(len(array)) :
