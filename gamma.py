@@ -1,81 +1,65 @@
 import numpy as np
 import random
 
-# field = np.zeros((5, 5)) # 5 * 5  사이즈의 필드 생성
-field = np.zeros((3, 3)) # 3 * 3  사이즈의 연습용 필드 생성
-actions = [0, 1, 2, 3] # 동 서 남 북
+class GridWorld:
+    def __init__(self):
+        self.grid_size = 3
+        self.goal_states = [(0, 0), (2, 2)]
+        self.state = None
+        self.reset()
 
-Q = np.zeros((len(field) * len(field[0]), len(actions))) # Q 매트릭스 생성
-# R = np.zeros((len(field), len(actions)))
+    def reset(self):
+        self.state = (1, 1)  # 중간 위치에서 시작
+        return self.state_to_index(self.state)
 
-goal = [len(field) - 1, len(field) - 1]
+    def step(self, action):
+        x, y = self.state
+        if action == 0: y = max(y - 1, 0)  # 상
+        elif action == 1: y = min(y + 1, self.grid_size - 1)  # 하
+        elif action == 2: x = max(x - 1, 0)  # 좌
+        elif action == 3: x = min(x + 1, self.grid_size - 1)  # 우
 
-R = [[0, -1, 0, -1], [0, 0, -1, -1], [-1, 0, 0, -1], # 연습용 R 매트릭스
-        [-1, -1, 0, 0], [0, 0, 0, 0], [-1, -1, 100, 0],
-        [0, -1, -1, 0], [100, 0, -1, -1], [0, 0, 0, 0]]
+        self.state = (x, y)
+        done = self.state in self.goal_states
+        reward = 1 if done else -1
+        return self.state_to_index(self.state), reward, done
 
-Gamma = 0.8
-epsilon = 0.9
+    def state_to_index(self, state):
+        return state[0] + self.grid_size * state[1]
 
-# alpha
-learning_rate = 0.1
+def choose_action(state_index, q_table, epsilon):
+    if random.uniform(0, 1) < epsilon:
+        return random.choice([0, 1, 2, 3])  # 무작위 행동 선택
+    else:
+        return np.argmax(q_table[state_index])  # Q-테이블에서 최적의 행동 선택
 
-# Q(state, action) = Q(state, action) + alpha* [R(state, action) + Gamma * max(Q(next state, all actions)) - Q(state, action)]
+def update_q_table(q_table, state_index, action, reward, next_state_index, alpha, gamma):
+    predict = q_table[state_index][action]
+    target = reward + gamma * np.max(q_table[next_state_index])
+    q_table[state_index][action] += alpha * (target - predict)
 
-for z in range(10) :
-    for i in range(len(Q) - 1) :
-        for a in actions :
-             Q[i][a] = Q[i][a] + learning_rate * (R[i][a] + Gamma * max(Q[i + 1]) - Q[i][a])
-    print(z,'번째 실행의 Q')
-    print(Q)
-    print('------------------')
+# 환경 및 Q-테이블 초기화
+env = GridWorld()
+q_table = np.zeros((env.grid_size ** 2, 4))
 
+# 학습 파라미터 설정
+alpha = 0.1  # 학습률
+gamma = 0.9  # 할인 계수
+epsilon = 0.1  # 탐색 확률
+episodes = 1000  # 총 에피소드 수
 
-agent = [0, 0]
+# Q-러닝 학습 과정
+for episode in range(episodes):
+    state_index = env.reset()
+    done = False
 
-def next_state(agent, action) : 
-        if action == 0 and agent[1] < len(field) : # 동
-                agent[1] += 1
-
-        if action == 1 and agent[1] > 0 : # 서
-                agent[1] -= 1
-
-        if action == 2 and agent[0] < len(field[0]) : # 남
-                agent[0] += 1
-
-        if action == 3 and agent[0] > 0 : # 북
-                agent[0] -= 1
-
-        return agent, action
-
+    while not done:
+        action = choose_action(state_index, q_table, epsilon)
+        next_state_index, reward, done = env.step(action)
         
-if random.random() <= epsilon :
-        agent, action = next_state(agent, random.randint(0, 4))
+        update_q_table(q_table, state_index, action, reward, next_state_index, alpha, gamma)
+        state_index = next_state_index
 
-else :
-        agent, action = next_state(agent, np.argmax(Q[agent[0] * 3 + agent[1]]))
-
-
-
-print(agent)
-
-
-
-
-
-# for i in range(len(field)) :
-#       for k in range(len(field[0])) :
-#            field[i][k] = np.argmax(Q[i * 3 + k])
-
-# print(field)
-# action = []
-
-# for _ in range(len(field)) :
-#     for p in range(len(actions)) :
-#         for i in range(len(field)) :
-#                 for a in actions :
-#                         action.append(Q[0][a])
-        
-
-# Q[0][0] = R[0][0] + Gamma * max(action)
-
+# 학습된 Q-테이블 출력
+print("Q-Table:")
+print(q_table)
