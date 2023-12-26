@@ -27,7 +27,7 @@ minus = 0.000015 # 입실론 감쇠값
 
 episode_count= 50 # 에피소드 진행 횟수
 
-loss = 1 # UAV가 센싱 지역에 도착하기 전에 데이터가 전송될 경우의 보상 값
+loss = 10 # UAV가 센싱 지역에 도착하기 전에 데이터가 전송될 경우의 보상 값
 sending = 1 # UAV가 센싱 지역에 도착하여 데이터가 전송될 경우의 보상 값
 
 epsilon = 0.9  # 입실론 값 설정
@@ -38,12 +38,12 @@ total_reward_= 0 # 에이전트가 보내지 못한 수치
 # 각 상태들의 데이터 발생하지 않을 확률
 percents = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
             1.0, 0.8, 1.0, 1.0, 1.0, 1.0,
-            1.0, 0.8, 1.0, 1.0, 1.0, 1.0,
+            1.0, 1.0, 0.8, 1.0, 1.0, 1.0,
             1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-            1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+            1.0, 1.0, 1.0, 1.0, 0.8, 1.0,
             1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
 
-check_date = [0 for _ in range(num_states * num_states)]
+check_date = [0 for _ in range(num_states * num_states)] # 에이전트가 전송 못한 데이터 체크용
 
 # 환경에서 R-matrix 업데이트 함수
 def is_Data(location, Q : bool):
@@ -197,19 +197,19 @@ def start():
 
                         # 데이터가 손실된 지역의 왼쪽에서의 R matrix값 증가
                         if k % num_states != 0 : 
-                            R[k - 1][0] += loss
+                            R[k - 1][0] -= loss
 
                         # 데이터가 손실된 지역의 오른쪽에서의 R matrix값 증가
                         if k % num_states != 5 :
-                            R[k + 1][1] += loss
+                            R[k + 1][1] -= loss
 
                         # 데이터가 손실된 지역의 위에서의 R matrix값 증가
                         if k > 4 : # i > 4
-                            R[k - num_states][2] += loss
+                            R[k - num_states][2] -= loss
                         
                         # 데이터가 손실된 지역의 아래쪽에서의 R matrix값 증가
                         if k < 20 : # i < 20
-                            R[k + num_states][3] += loss
+                            R[k + num_states][3] -= loss
 
                         total_reward_ -= 1  # 누적 보상 감소
                 else :   
@@ -229,16 +229,17 @@ def start():
 
         array.append(total_reward)
         array2.append(total_reward_)
-    #     print('-------------------------------------')
-    #     print(j, '번째 에피소드')
-    #     print(world)
-    #     print('종료시점의 epsilon :', epsilon)
-    #     print('이번 에피소드 :', total_reward)
-    #     print()
-    #     print('에이전트가 탐지 하지 못한 센싱 데이터')
-    #     show_array(check_date)
+        print()
+        print('-------------------------------------')
+        print(j, '번째 에피소드')
+        print(world)
+        print('종료시점의 epsilon :', epsilon)
+        print('이번 에피소드 :', total_reward)
+        print()
+        print('에이전트가 탐지 하지 못한 센싱 데이터')
+        show_array(check_date)
         
-    #     print('-------------------------------------')
+        print('-------------------------------------')
         
     print('에피소드 별로 누적된 보상')
     print(array)
@@ -477,9 +478,9 @@ def show_matrix(matrix) :
         
 if __name__ == "__main__":
 
-    # start()
+    start()
     # print('--------------------------------')
     # start2()
-    world[len(world) // 2][len(world) // 2] = 1 # UAV의 초기 위치
+    # world[len(world) // 2][len(world) // 2] = 1 # UAV의 초기 위치
     
-    print(world)
+    # print(world)
