@@ -1,68 +1,55 @@
 import numpy as np
 
-# UAV의 상태와 행동, 보상을 정의하는 클래스
-class DisasterResponseModel:
-    def __init__(self, num_states, num_actions):
-        self.num_states = num_states
-        self.num_actions = num_actions
-        self.state_transition_matrix = np.zeros((num_states, num_actions, num_states))
-        self.reward_matrix = np.random.rand(num_states, num_actions)  # 임의로 설정된 보상 값
+# 환경 설정: 그리드 크기, 행동 개수
+grid_size = 5
+num_actions = 4  # 동, 서, 남, 북
 
-    def set_transitions(self, state, action, next_state, prob):
-        self.state_transition_matrix[state, action, next_state] = prob
+# Q-매트릭스 초기화
+Q = np.zeros((grid_size * grid_size, num_actions))
 
-    def step(self, state, action):
-        next_state_probs = self.state_transition_matrix[state, action]
-        next_state = np.random.choice(self.num_states, 1, p=next_state_probs)[0]
-        reward = self.reward_matrix[state, action]
-        return next_state, reward
+# 학습 매개변수 설정
+learning_rate = 0.1
+discount_factor = 0.99
+num_episodes = 1000
 
-# 정책 반복 알고리즘 구현
-def policy_iteration(model, discount_factor=0.95, max_iterations=1000):
-    policy = np.zeros(model.num_states, dtype=int)
-    value_function = np.zeros(model.num_states)
+# 이동 함수 정의
+def move(state, action):
+    row, col = divmod(state, grid_size)
+    if action == 0 and col < grid_size - 1:  # 동
+        col += 1
+    elif action == 1 and col > 0:  # 서
+        col -= 1
+    elif action == 2 and row < grid_size - 1:  # 남
+        row += 1
+    elif action == 3 and row > 0:  # 북
+        row -= 1
+    return row * grid_size + col
 
-    for _ in range(max_iterations):
-        # 정책 평가
-        while True:
-            new_value_function = np.copy(value_function)
-            for state in range(model.num_states):
-                action = policy[state]
-                value_function[state] = sum([trans_prob * (model.reward_matrix[state, action] + discount_factor * new_value_function[next_state])
-                                             for next_state, trans_prob in enumerate(model.state_transition_matrix[state, action])])
-            if np.max(np.abs(new_value_function - value_function)) < 1e-4:
-                break
+# 에이전트가 환경에서 학습하는 과정
+for episode in range(num_episodes):
+    # 초기 상태 설정
+    state = np.random.randint(0, grid_size * grid_size)
+    
+    # 한 에피소드 내에서의 학습 과정
+    while True:
+        # 임의로 행동 선택
+        action = np.random.randint(0, num_actions)
 
-        # 정책 개선
-        policy_stable = True
-        for state in range(model.num_states):
-            old_action = policy[state]
-            q_values = np.zeros(model.num_actions)
-            for action in range(model.num_actions):
-                q_values[action] = sum([trans_prob * (model.reward_matrix[state, action] + discount_factor * value_function[next_state])
-                                        for next_state, trans_prob in enumerate(model.state_transition_matrix[state, action])])
-            best_action = np.argmax(q_values)
-            policy[state] = best_action
-            if old_action != best_action:
-                policy_stable = False
+        # 새로운 상태와 보상 받기
+        next_state = move(state, action)
+        reward = np.random.rand()  # 임의의 보상 설정
 
-        if policy_stable:
+        # Q-값 업데이트
+        Q[state, action] += learning_rate * (reward + discount_factor * np.max(Q[next_state, :]) - Q[state, action])
+
+        # 다음 상태로 이동
+        state = next_state
+
+        # 간단한 예제를 위해 무작위로 에피소드 종료
+        if np.random.rand() < 0.1:
             break
 
-    return policy, value_function
 
-# 예제 모델 생성 및 정책 반복 실행
-num_states = 10  # 가정된 상태의 수
-num_actions = 4  # 가정된 행동의 수
-model = DisasterResponseModel(num_states, num_actions)
-
-# 임시 상태 전이 확률 설정
-for state in range(num_states):
-    for action in range(num_actions):
-        next_state = (state + action) % num_states
-        model.set_transitions(state, action, next_state, 1.0)  # 단순화를 위해 결정론적 전이
-
-# 정책 반복 실행
-optimal_policy, value_function = policy_iteration(model)
-print("최적 정책:", optimal_policy)
-print("가치 함수:", value_function)
+# 업데이트된 Q-매트릭스 출력
+print("Q-매트릭스:")
+print(Q)
