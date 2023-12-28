@@ -21,14 +21,14 @@ world[len(world) // 2][len(world) // 2] = 1 # UAV의 초기 위치
 
 # 학습 매개변수
 gamma = 0.1  # 할인 계수
-learning_rate = 0.01  # 학습률
+learning_rate = 0.001  # 학습률
 num_episodes = 1000  # 총 에피소드 수
 minus = 0.00001 # 입실론 감쇠값
 
 episode_count = 100 # 에피소드 진행 횟수
 
 loss = 5 # UAV가 센싱 지역에 도착하기 전에 데이터가 전송될 경우의 보상 값
-sending = 10 # UAV가 센싱 지역에 도착하여 데이터가 전송될 경우의 보상 값
+#sending = 5 # UAV가 센싱 지역에 도착하여 데이터가 전송될 경우의 보상 값
 
 epsilon = 0.9  # 입실론 값 설정
 
@@ -50,10 +50,6 @@ response_data = [] # 각 에피소드마다 데이터가 몇회 생성 되었는
 def is_Data(location, is_Q : bool):
 
     global total_reward, total_reward_ , R
-    # print(location[0] * num_states + location[1])
-    # print(num_states)
-    # print((location[0] * num_states + location[1]) % num_states)
-    # print(location[0] * num_states + location[1] % num_states != 0)
     # UAV가 데이터가 소실되기 전에 센싱 지역에 도착해서 데이터를 전송할 경우
     if field[location[0] * num_states + location[1]][0] == 1 :
         
@@ -68,19 +64,19 @@ def is_Data(location, is_Q : bool):
         if is_Q :
         # 데이터가 센싱된 지역의 왼쪽에서의 R matrix값 증가
             if (location[0] * num_states + location[1]) % num_states != 0 : 
-                R[location[0] * num_states + location[1] - 1][0] =0
+                R[location[0] * num_states + location[1] - 1][0] = 0
 
             # 데이터가 센싱된 지역의 오른쪽에서의 R matrix값 증가
             if (location[0] * num_states + location[1]) % num_states != 5 :
-                R[location[0] * num_states + location[1] + 1][1] =0
+                R[location[0] * num_states + location[1] + 1][1] = 0
 
             # 데이터가 센싱된 지역의 위에서의 R matrix값 증가
             if (location[0] * num_states + location[1]) > 5 : # i > 4
-                R[location[0] * num_states + location[1] - num_states][2] =0
+                R[location[0] * num_states + location[1] - num_states][2] = 0
         
             # 데이터가 센싱된 지역의 아래쪽에서의 R matrix값 증가
             if (location[0] * num_states + location[1]) < 30 : # i < 20
-                R[location[0] * num_states + location[1] + num_states][3] =0
+                R[location[0] * num_states + location[1] + num_states][3] = 0
 
         # 가장 자리에 있을 때 한자리에 계속 있지 않도록 보상 수정
         for i in range(len(R)) :
@@ -219,17 +215,17 @@ def start():
                 if field[k][0] == 1:  # 센싱 데이터가 존재하는 경우
                     field[k][1] += 1  # 카운트 증가
                     
-                    # if k % num_states != 0 : 
-                    #     R[k - 1][0] += field[k][1] // 2 # * 2
+                    if k % num_states != 0 : 
+                        R[k - 1][0] += field[k][1] // 2 # * 2
 
-                    # if k % num_states != 5 :
-                    #     R[k + 1][1] += field[k][1] // 2 # * 2
+                    if k % num_states != 5 :
+                        R[k + 1][1] += field[k][1] // 2 # * 2
 
-                    # if k > 5 : # i > 5
-                    #     R[k - num_states][2] += field[k][1] // 2 # * 2
+                    if k > 5 : # i > 5
+                        R[k - num_states][2] += field[k][1] // 2 # * 2
                         
-                    # if k < 30 : # i < 20
-                    #     R[k + num_states][3] += field[k][1] // 2 # * 2
+                    if k < 30 : # i < 20
+                        R[k + num_states][3] += field[k][1] // 2 # * 2
 
                     if field[k][1] > limit:  # 카운트가 특정 값을 넘으면(너무 오래 걸릴 경우)
                         check_date[k] += 1
@@ -237,23 +233,24 @@ def start():
                         field[k][0] = 0  # 데이터 제거
                         field[k][1] = 0  # 카운트 초기화
 
-                        # 데이터가 손실된 지역의 왼쪽에서의 R matrix값 증가
+                        # 데이터가 손실된 지역의 왼쪽에서 접근하는 액션의 R matrix값 증가
                         if k % num_states != 0 : 
                             R[k - 1][0] += loss
 
-                        # 데이터가 손실된 지역의 오른쪽에서의 R matrix값 증가
+                        # 데이터가 손실된 지역의 오른쪽에서에서 접근하는 액션의 R matrix값 증가
                         if k % num_states != 5 :
                             R[k + 1][1] += loss
 
-                        # 데이터가 손실된 지역의 위에서의 R matrix값 증가
+                        # 데이터가 손실된 지역의 위에서에서 접근하는 액션의 R matrix값 증가
                         if k > 4 : # i > 4
                             R[k - num_states][2] += loss
                         
-                        # 데이터가 손실된 지역의 아래쪽에서의 R matrix값 증가
+                        # 데이터가 손실된 지역의 아래쪽에서에서 접근하는 액션의 R matrix값 증가
                         if k < 20 : # i < 20
                             R[k + num_states][3] += loss
 
                         total_reward_ -= 1 # 누적 보상 감소
+
                 # elif data_count <= 500 :
                 else :
                     percent = random.random()  # 매 상태마다 무작위 확률 생성
@@ -297,8 +294,9 @@ def start():
         if round(((total_reward + total_reward_) / data_count) * 100, 2) >= 70 :
             break
 
-    # for i in range(len(array)) :
-    #     print(i + 1,'회차 UAV가 보낸 퍼센트', (round(((array[i] + array2[i]) / response_data[i]) * 100, 2)))
+    for i in range(len(array)) :
+        print(i + 1,'회차 UAV가 보낸 비율', (round(((array[i] + array2[i]) / response_data[i]) * 100, 2)))
+    
 
    # print('에피소드 별로 누적된 보상')
     #print(array)
@@ -644,8 +642,6 @@ def show_matrix(matrix) :
         if i % 6 == 0 :
             print('-----------------')
         print(np.round(matrix[i], 2))
-
-
 
 ''''''
         
