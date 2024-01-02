@@ -11,10 +11,10 @@ field = [[0, 0] for _ in range(grid_size * grid_size)]
 
 # 각 상태들의 데이터 발생하지 않을 확률
 percents = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-            1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-            1.0, 0.6, 1.0, 1.0, 1.0, 1.0,
-            1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-            1.0, 0.6, 1.0, 1.0, 1.0, 1.0,
+            1.0, 1.0, 1.0, 1.0, 0.1, 1.0,
+            1.0, 0.8, 1.0, 1.0, 1.0, 1.0,
+            1.0, 1.0, 1.0, 1.0, 0.4, 1.0,
+            1.0, 0.7, 1.0, 1.0, 0.4, 1.0,
             1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
 
 n_episodes = 30  # 실행할 에피소드의 수
@@ -27,7 +27,7 @@ Q = np.zeros((n_states, n_actions))  # 각 상태와 액션에 대해 0으로 �
 # 입실론 그리디 파라미터 설정
 epsilon = 0.9  # 입실론 초기값, 무작위 액션을 선택할 확률
 minus = 0.0001  # 각 에피소드 후에 입실론을 감소시킬 값
-learning_rate = 0.001  # 학습률
+learning_rate = 0.2  # 학습률
 discount_factor = 0.9  # 할인 계수
 
 # 가중치 설정
@@ -144,6 +144,8 @@ def show_field() :
 for episode in range(n_episodes):
 
     state = n_states // 2  # 무작위로 초기 상태 선택
+    print(state)
+    input()
 
     # 데이터 존재유무, 데이터 생성 된 카운트 저장
     field = [[0, 0] for _ in range(grid_size * grid_size)]
@@ -185,18 +187,19 @@ for episode in range(n_episodes):
         state = next_state  # 상태 업데이트
 
         # 결과 출력
-        print("Q-Table:")
-        show_matrix(Q)
-        print("Current Grid Position:")
-        print()
-        result = round(((check / check_) * 100))
+        # print("Q-Table:")
+        # show_matrix(Q)
+        # print("Current Grid Position:")
+        # print()
+        # result = round(((check / check_) * 100))
         
-        print(episode, '번째의 데이터 전송 횟수', end = ' ')
-        print(result, '%')
-        print_grid(state)
-        show_field()
-    #print()
-    results.append(result)
-    print(results)
-    print('현재 입실론 :', epsilon)
-    input()  # 사용자 입력 대기 (다음 스텝으로 진행하기 위해)
+        # print(episode, '번째의 데이터 전송 횟수', end = ' ')
+        # print(result, '%')
+        # print_grid(state)
+        # show_field()
+        # #print()
+        # # results.append(result)
+        # # print(results)
+        # print('현재 입실론 :', epsilon)
+        # #input()  # 사용자 입력 대기 (다음 스텝으로 진행하기 위해)
+    #input()

@@ -78,7 +78,7 @@ def is_Data(location, is_Q : bool):
             if (location[0] * num_states + location[1]) < 30 : # i < 20
                 R[location[0] * num_states + location[1] + num_states][3] = 0
 
-        # 가장 자리에 있을 때 한자리에 계속 있지 않도록 보상 수정
+        # 가장 자리에 있을 때 한자리에 계속 있지 않도록 Q매트릭스 수정
         for i in range(len(R)) :
             if i == 0 :
                 Q[i][1] = 0
