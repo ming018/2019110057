@@ -32,7 +32,7 @@ percents = [1.0, 1.0, 0.0, 1.0, 1.0,
 '''
 
 class UAV :
-    battery = 30
+    battery = 50
 
 battery_location = [[0, 0], [0, 4], [0, 9], [4, 0], [4, 9], [9, 0], [9, 4], [9, 9]] # 배터리 충전소
 #battery_location = [[0, 0], [0, 4], [4, 0], [4, 4]] # 배터리 충전소
@@ -45,7 +45,7 @@ results = []
 Q = np.zeros((n_states, n_actions))  # 각 상태와 액션에 대해 0으로 초기화된 Q-테이블 생성
 
 # 입실론 그리디 파라미터 설정
-epsilon = 0.99  # 입실론 초기값, 무작위 액션을 선택할 확률
+epsilon = 0.9  # 입실론 초기값, 무작위 액션을 선택할 확률
 minus = 0.0001  # 각 에피소드 후에 입실론을 감소시킬 값
 learning_rate = 0.2  # 학습률
 discount_factor = 0.9  # 할인 계수
@@ -122,7 +122,7 @@ def def_action(state, action) :
             return -2
         
         else : # 배터리 충전소가 아닌 장소에서 교체를 시도할 경우
-            return -15
+            return -99
         
             
     elif action == 5 : # 데이터 전송
@@ -228,7 +228,7 @@ for episode in range(n_episodes):
     state = 12 
 
     check = 0
-    check_ = 1
+    check_ = 0
 
     grid = np.zeros((grid_size, grid_size))  # 그리드 초기화
 
@@ -251,7 +251,8 @@ for episode in range(n_episodes):
         else:
             action = np.argmax(Q[state, :])  # Q-테이블에서 최대값을 가진 액션 선택
 
-        epsilon -= minus  # 입실론 값 감소
+        if epsilon >= 0.4:
+            epsilon -= minus  # 입실론 값 감소
 
         # 선택된 액션으로 환경에서 한 스텝 진행
         next_state, reward_ = step(state, action)
@@ -285,21 +286,22 @@ for episode in range(n_episodes):
         #print()        print()
 
     
-    result = (check / check_) * 100
-    print(episode, '번째의 데이터 전송 횟수', end = ' ')
-    print(result, '%')
-    
-    print('check :', check)
-    print('check_ :', check_)
-    results.append(result)
-    #print(results)
-    print_grid(999, _, True)
-    print('현재 입실론 :', epsilon)
-    #input()
+        if episode >= 490 :
+            result = (check / check_) * 100
+            print(episode, '번째의 데이터 전송 비율', end = ' ')
+            print(result, '%')
+            
+            print('check :', check)
+            print('check_ :', check_)
+            results.append(result)
+            #print(results)
+            print_grid(999, _, True)
+            print('현재 입실론 :', epsilon)
+            #input()
 
-    # if input() == 'a' :  # 사용자 입력 대기 (다음 스텝으로 진행하기 위해)
-    #     show_matrix(Q)
-    #     print()
-    input()
+            # if input() == 'a' :  # 사용자 입력 대기 (다음 스텝으로 진행하기 위해)
+            #     show_matrix(Q)
+            #     print()
+            input()
 
 #print(results)
