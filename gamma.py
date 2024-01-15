@@ -12,16 +12,16 @@ n_states = grid_size * grid_size  # 상태의 수: 그리드 크기의 제곱
 field = [[0, 0] for _ in range(grid_size * grid_size)]
 
 # 각 상태들의 데이터 발생하지 않을 확률
-percents = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+percents = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.4, 1.0,
             1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
             1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
             1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
             1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+            1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0,
             1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
             1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-            1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-            1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-            0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+            1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0,
+            1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
 # 61 81 84 90
 '''
 percents = [1.0, 1.0, 0.0, 1.0, 1.0,
@@ -34,19 +34,23 @@ percents = [1.0, 1.0, 0.0, 1.0, 1.0,
 class UAV :
     battery = 50
 
-battery_location = [[0, 0], [0, 4], [0, 9], [4, 0], [4, 9], [9, 0], [9, 4], [9, 9]] # 배터리 충전소
+battery_location = [[0, 0], [0, 4], [0, 9], [4, 0], [4, 9], [9, 0], [9, 4], [9, 9], [4, 4]] # 배터리 충전소
 #battery_location = [[0, 0], [0, 4], [4, 0], [4, 4]] # 배터리 충전소
 
 n_episodes = 500  # 실행할 에피소드의 수
 
 results = []
+results_ = []
+results__ = []
+check_battery_out_episode = []
+
 
 # Q 테이블 초기화
 Q = np.zeros((n_states, n_actions))  # 각 상태와 액션에 대해 0으로 초기화된 Q-테이블 생성
 
 # 입실론 그리디 파라미터 설정
-epsilon = 0.9  # 입실론 초기값, 무작위 액션을 선택할 확률
-minus = 0.0001  # 각 에피소드 후에 입실론을 감소시킬 값
+epsilon = 0.7  # 입실론 초기값, 무작위 액션을 선택할 확률
+minus = 0.000025  # 각 에피소드 후에 입실론을 감소시킬 값
 learning_rate = 0.2  # 학습률
 discount_factor = 0.9  # 할인 계수
 
@@ -117,12 +121,12 @@ def def_action(state, action) :
 
     if action == 4 : # 배터리 교체
         if [x, y] in battery_location : # 배터리 충전소에서 교체를 시도할 경우
-            UAV.battery = 25
-            print('충전 함')
-            return -2
+            UAV.battery = 50
+            # print('충전 함')
+            return 5
         
         else : # 배터리 충전소가 아닌 장소에서 교체를 시도할 경우
-            return -99
+            return -150
         
             
     elif action == 5 : # 데이터 전송
@@ -131,7 +135,8 @@ def def_action(state, action) :
         
         else :
             return try_send(state) # 데이터가 발생하는 지점에서 데이터 전송 시도할 경우
-
+        
+'''
 def try_send(next_state): # UAV의 다음 상태에 데이터가 있는지 확인
     global check
 
@@ -146,7 +151,7 @@ def try_send(next_state): # UAV의 다음 상태에 데이터가 있는지 확�
         return 25 - field[next_state][1] # 다음 상태에 데이터가 있어서 전송이 됐다면 30 - 데이터 생성시간 만큼의 보상 지급
 
     return -15 # 데이터가 없을 경우 -2의 값을 반환
-
+'''
 
 def check_data(next_state) : # UAV의 다음 상태가 데이터 발생 지역이고, 데이터가 있을 경우 바로 전송
     global check
@@ -177,8 +182,8 @@ def g(next_state):
             field[i][0] = 0 # 데이터 제거
             field[i][1] = 0 # 카운트 초기화
 
-            check_timeout -= 5 # 베타 값 임시 지정, 수정 필요 
-            check_ += 1
+            check_timeout -= 50 # 베타 값 임시 지정, 수정 필요 
+            # check_ += 1
 
     return check_timeout
 
@@ -197,19 +202,46 @@ def show_field() :
 grid = np.zeros((grid_size, grid_size))  # 그리드 초기화
 
 # 그리드에 에이전트 위치를 표시하는 함수
-def print_grid(state, i, show = bool):
-    #global grid
+# def print_grid(state, i, show = bool):
+#     #global grid
 
-    #grid = np.full((grid_size, grid_size), 0)  # 그리드 초기화
+#     #grid = np.full((grid_size, grid_size), 0)  # 그리드 초기화
 
-    if state == 999 :
-        print(grid)
-        return
+#     if state == 999 :
+#         print(grid)
+#         return
     
-    x, y = state_to_position(state)
-    grid[x][y] += 1  # 에이전트 위치 표시
-    if i == 999 or show :
-        print(grid)
+#     x, y = state_to_position(state)
+#     grid[x][y] += 1  # 에이전트 위치 표시
+#     if i == 999 or show :
+#         print(grid)
+
+def print_grid(state, path, show=bool):
+    grid = [['-' for _ in range(grid_size)] for _ in range(grid_size)]  # 그리드 초기화
+
+    # 충전소 위치 표시
+    for loc in battery_location:
+        x, y = loc
+        grid[x][y] = 'C'  # 'C'는 충전소를 의미
+
+    # UAV의 경로 표시
+    for pos in path:
+        x, y = pos
+        grid[x][y] = '*'  # '*'는 UAV의 경로를 의미
+
+    # 데이터 생성 지점 표시
+    for i, (data_present, _) in enumerate(field):
+        if data_present == 1:
+            x, y = state_to_position(i)
+            grid[x][y] = 'D'  # 'D'는 데이터 생성 지점을 의미
+
+    # 그리드 출력
+    for row in grid:
+        print(' '.join(row))
+    if show:
+        print(f"현재 배터리 수준: {UAV.battery}")
+
+        print()
 
 # 매트릭스 출력을 위한 함수
 def show_matrix(matrix):
@@ -219,89 +251,125 @@ def show_matrix(matrix):
             print('-----------------')
         print(np.round(matrix[i], 2))  # Q-테이블의 각 행을 보기 좋게 출력
 
+def find_nearest_charging_station(current_position):
+    min_distance = float('inf')
+    nearest_station = None
+    for station in battery_location:
+        distance = abs(station[0] - current_position[0]) + abs(station[1] - current_position[1])
+        if distance < min_distance:
+            min_distance = distance
+            nearest_station = station
+    return nearest_station
+
+
+def calculate_priorities(field, current_state):
+    priorities = np.zeros(n_states)
+    for state, (data_exist, _) in enumerate(field):
+        # 데이터가 있는 상태에 더 높은 우선순위 부여
+        if data_exist == 1:
+            priorities[state] = 1.0  # 데이터가 있는 경우 높은 우선순위
+        else:
+            priorities[state] = 0.0  # 데이터가 없는 경우 낮은 우선순위
+    return priorities
+
 # Q-러닝 알고리즘 실행
 for episode in range(n_episodes):
 
     # 데이터 존재유무, 데이터 생성 된 카운트 저장
     field = [[0, 0] for _ in range(grid_size * grid_size)]
 
-    state = 12 
+    path = []
+    state = 12
+    UAV.battery = 50
+    # gpt가 추가한 부분
 
     check = 0
     check_ = 0
 
     grid = np.zeros((grid_size, grid_size))  # 그리드 초기화
 
-    UAV.battery = 25
+    #UAV.battery = 50
 
     for _ in range(100):  # 각 에피소드에 대한 최대 스텝 수
         # 입실론 그리디 전략으로 액션 선택
 
         for i in range(len(field)) :
-            if field[i][0] == 0 : # 현재 데이터가 발생하지 않았을 경우
-                if random.random() > percents[i] : # 현재 상태에 데이터가 발생하게 된 경우
+            if field[i][0] == 0:  # 현재 데이터가 발생하지 않았을 경우
+                if random.random() > percents[i]:  # 현재 상태에 데이터가 발생하게 된 경우
                     field[i][0] = 1
+                    check_ += 1
+            else:  # 이미 데이터가 있는 경우
+                field[i][1] += 1  # 카운트 증가
 
-            else : # 이미 데이터가 있는 경우
-                field[i][1] += 1 # 카운트 증가
-
+        # 액션 선택 부분
         if random.random() < epsilon:
-            action = random.choice([a for a in range(n_actions)])  # 모든 액션 중 무작위 선택
+            possible_actions = [a for a in range(n_actions)]  # 가능한 모든 액션
+            current_position = state_to_position(state)
+            
+            # 현재 위치가 배터리 충전소가 아니면 배터리 충전 액션 제외
+            if current_position not in battery_location:
+                possible_actions.remove(4)  # 배터리 충전 액션 제거
 
+            action = random.choice(possible_actions)
         else:
-            action = np.argmax(Q[state, :])  # Q-테이블에서 최대값을 가진 액션 선택
+            action = np.argmax(Q[state, :])  # 최적의 액션 선택
 
         if epsilon >= 0.4:
             epsilon -= minus  # 입실론 값 감소
+        #epsilon -= minus
 
         # 선택된 액션으로 환경에서 한 스텝 진행
         next_state, reward_ = step(state, action)
 
-        # reward_ = reward(next_state, battery)#
-        #reward_ = 1
+        # UAV의 경로에 현재 상태 추가
+        path.append(state_to_position(state))
 
-        # Q-러닝 업데이트
-        print_grid(state, _, False)
-
-        if UAV.battery <= 0 :
-            reward_ = -50
-            print()
-            print_grid(999, _, True)
-            print('배터리 소모')
-            print()
+        if UAV.battery <= 0:
+            reward_ = -99
+            check_battery_out_episode.append(episode)
             break
         
+        # Q-러닝 업데이트
         Q[state, action] = Q[state, action] + learning_rate * (reward_ + discount_factor * np.max(Q[next_state, :]) - Q[state, action])
 
         state = next_state  # 상태 업데이트
 
-        # 결과 출력
+    # 에피소드 종료 후 처리
+    result = (check / check_) * 100 if check_ > 0 else 0  # 0으로 나누는 경우 방지
 
-        # print("Q-Table:")
-        # show_matrix(Q)
-        # print("Current Grid Position:")
-        # print()
+    if episode >= 497 :
+        print(episode, '번째의 데이터 전송 비율', end = ' ')
+        print(result, '%')
+        
+        print('check :', check)
+        print('check_ :', check_)
+        print('에피소드', episode)
+        print(epsilon)
 
-        #show_field()
-        #print()        print()
+        if action == 0 :
+            print('동')
+        elif action == 1 :
+            print('서')
+        elif action == 2 :
+            print('남')
+        elif action == 3 :
+            print('북')
+        elif action == 4 :
+            print('충전 시도')
 
-    
-        if episode >= 490 :
-            result = (check / check_) * 100
-            print(episode, '번째의 데이터 전송 비율', end = ' ')
-            print(result, '%')
-            
-            print('check :', check)
-            print('check_ :', check_)
-            results.append(result)
-            #print(results)
-            print_grid(999, _, True)
-            print('현재 입실론 :', epsilon)
-            #input()
+        print_grid(state, path, True)
+        input()
 
-            # if input() == 'a' :  # 사용자 입력 대기 (다음 스텝으로 진행하기 위해)
-            #     show_matrix(Q)
-            #     print()
-            input()
+    results.append(check)
+    results_.append(check_)
+    results__.append(result)
 
-#print(results)
+# 에피소드 결과 출력
+for i in range(n_episodes):
+    if i in check_battery_out_episode:
+        print(f'에피소드 {i}의 전송 비율 : {round(results__[i], 2)})%, 배터리 광탈된 에피소드')
+    else:
+        print(f'에피소드 {i}의 전송 비율 : {round(results__[i], 2)}%')
+
+print(len(results__))
+print(check_battery_out_episode)
